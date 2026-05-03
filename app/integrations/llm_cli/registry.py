@@ -23,6 +23,12 @@ def _codex_factory() -> LLMCLIAdapter:
     return CodexAdapter()
 
 
+def _claude_code_factory() -> LLMCLIAdapter:
+    from app.integrations.llm_cli.claude_code import ClaudeCodeAdapter
+
+    return ClaudeCodeAdapter()
+
+
 def _kimi_factory() -> LLMCLIAdapter:
     from app.integrations.llm_cli.kimi import KimiAdapter
 
@@ -31,6 +37,9 @@ def _kimi_factory() -> LLMCLIAdapter:
 
 CLI_PROVIDER_REGISTRY: dict[str, CLIProviderRegistration] = {
     "codex": CLIProviderRegistration(adapter_factory=_codex_factory, model_env_key="CODEX_MODEL"),
+    "claude-code": CLIProviderRegistration(
+        adapter_factory=_claude_code_factory, model_env_key="CLAUDE_CODE_MODEL"
+    ),
     "kimi": CLIProviderRegistration(adapter_factory=_kimi_factory, model_env_key="KIMI_MODEL"),
 }
 
