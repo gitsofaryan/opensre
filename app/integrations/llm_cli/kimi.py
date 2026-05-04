@@ -67,10 +67,12 @@ def _classify_kimi_login_status(
 
 
 def _check_kimi_auth_fallback() -> tuple[bool | None, str]:
-    """Fallback auth check via KIMI_API_KEY env var and config.toml."""
+    """Fallback auth check: KIMI_API_KEY env var, then config.toml."""
+    # First try KIMI_API_KEY environment variable
     if os.environ.get("KIMI_API_KEY", "").strip():
         return True, "Authenticated via KIMI_API_KEY environment variable."
 
+    # Then try config.toml
     share_dir = os.environ.get("KIMI_SHARE_DIR", "~/.kimi")
     config_path = pathlib.Path(os.path.expanduser(share_dir)) / "config.toml"
 
