@@ -112,6 +112,7 @@ def test_detect_missing_config_not_logged_in(
 def test_detect_login_status_not_logged_in_uses_api_key_fallback(
     mock_which: MagicMock, mock_run: MagicMock
 ) -> None:
+    """When kimi login status reports not logged in, check KIMI_API_KEY fallback."""
     mock_which.return_value = "/usr/bin/kimi"
 
     def side_effect(args: list[str], **kwargs: object) -> MagicMock:
