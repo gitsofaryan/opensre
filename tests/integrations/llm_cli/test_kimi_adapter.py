@@ -49,9 +49,7 @@ def test_detect_path_binary_logged_in_env(mock_which: MagicMock, mock_run: Magic
 
 @patch("app.integrations.llm_cli.kimi.subprocess.run")
 @patch("app.integrations.llm_cli.binary_resolver.shutil.which")
-def test_detect_min_version_enforcement(
-    mock_which: MagicMock, mock_run: MagicMock
-) -> None:
+def test_detect_min_version_enforcement(mock_which: MagicMock, mock_run: MagicMock) -> None:
     mock_which.return_value = "/usr/bin/kimi"
 
     def side_effect(args: list[str], **kwargs: object) -> MagicMock:
