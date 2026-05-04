@@ -35,13 +35,41 @@ def _parse_semver(text: str) -> str | None:
     return m.group(1) if m else None
 
 
-def _check_kimi_auth() -> tuple[bool | None, str]:
-    if os.environ.get("KIMI_API_KEY"):
-        return True, "Authenticated via KIMI_API_KEY environment variable."
+def _classify_kimi_login_status(
+    returncode: int, stdout: str, stderr: str
+) -> tuple[bool | None, str]:
+    """Classify Kimi login status output, following the Codex pattern."""
+    # Handle None values (defensive against subprocess edge cases)
+    stdout = stdout or ""
+    stderr = stderr or ""
+    text = (stdout + "\n" + stderr).lower()
 
-    # Strictly speaking, Kimi's native auth is via `kimi login`
-    # or the KIMI_API_KEY environment variable. We probe both to ensure
-    # the user has a valid session.
+    # Negative phrases first to avoid substring false-positives
+    if "not logged in" in text or "no credentials" in text or "unauthorized" in text:
+        return False, "Not logged in. Run: kimi login"
+    if returncode == 0 and ("logged in" in text or "authenticated" in text):
+        return True, (stdout.strip() or stderr.strip() or "Authenticated.").splitlines()[0]
+    if "expired" in text or ("invalid" in text and "token" in text):
+        return False, "Session expired. Re-authenticate: kimi login"
+    if "rate limit" in text or "quota" in text:
+        return True, "Authenticated but rate-limited; try again later."
+    if "network" in text or "unreachable" in text or "dns" in text or "connection refused" in text:
+        return None, "Network error while checking auth; will retry at invocation."
+    if returncode != 0:
+        tail = (stderr or stdout).strip()[:200]
+        return (
+            None,
+            f"Auth status unclear (exit {returncode}): {tail}"
+            if tail
+            else f"Auth status unclear (exit {returncode}).",
+        )
+    return None, "Auth status unknown."
+
+
+def _check_kimi_auth_fallback() -> tuple[bool | None, str]:
+    """Fallback auth check via KIMI_API_KEY env var and config.toml."""
+    if os.environ.get("KIMI_API_KEY", "").strip():
+        return True, "Authenticated via KIMI_API_KEY environment variable."
 
     share_dir = os.environ.get("KIMI_SHARE_DIR", "~/.kimi")
     config_path = pathlib.Path(os.path.expanduser(share_dir)) / "config.toml"
@@ -55,7 +83,7 @@ def _check_kimi_auth() -> tuple[bool | None, str]:
         providers = config.get("providers", {})
         if providers:
             for prov in providers.values():
-                if prov.get("api_key"):
+                if str(prov.get("api_key", "")).strip():
                     return True, "Authenticated via config.toml."
         return False, "No API key configured. Run: kimi login"
     except Exception as e:
@@ -149,7 +177,29 @@ class KimiAdapter:
                 f"upgrade: uv tool upgrade kimi-cli"
             )
 
-        logged_in, auth_detail = _check_kimi_auth()
+        # First, try 'kimi login status' for native CLI auth probe
+        try:
+            auth_proc = subprocess.run(
+                [binary_path, "login", "status"],
+                capture_output=True,
+                text=True,
+                timeout=_PROBE_TIMEOUT_SEC,
+                check=False,
+            )
+        except (OSError, subprocess.TimeoutExpired):
+            # login status unavailable; fall back to env/config checks
+            logged_in: bool | None = None
+            auth_detail = "Could not verify login status (timeout or OS error)."
+        else:
+            logged_in, auth_detail = _classify_kimi_login_status(
+                auth_proc.returncode, auth_proc.stdout, auth_proc.stderr
+            )
+            # API-key-only setups do not always show up in `kimi login status`.
+            if logged_in is not True:
+                logged_in_fb, auth_detail_fb = _check_kimi_auth_fallback()
+                if logged_in is None or logged_in_fb is True:
+                    logged_in = logged_in_fb
+                    auth_detail = auth_detail_fb
 
         detail = auth_detail + upgrade_note
         return CLIProbe(
@@ -168,7 +218,10 @@ class KimiAdapter:
                 version=None,
                 logged_in=None,
                 bin_path=None,
-                detail="Kimi Code CLI not found. Install with `uv tool install --python 3.13 kimi-cli`.",
+                detail=(
+                    "Kimi Code CLI not found. Install with "
+                    "`uv tool install --python 3.13 kimi-cli`."
+                ),
             )
         return self._probe_binary(binary)
 
@@ -176,7 +229,8 @@ class KimiAdapter:
         binary = self._resolve_binary()
         if not binary:
             raise RuntimeError(
-                "Kimi Code CLI not found. Install with `uv tool install --python 3.13 kimi-cli` or set KIMI_BIN."
+                "Kimi Code CLI not found. Install with "
+                "`uv tool install --python 3.13 kimi-cli` or set KIMI_BIN."
             )
 
         ws = workspace or os.getcwd()
@@ -210,8 +264,6 @@ class KimiAdapter:
         )
 
     def parse(self, *, stdout: str, stderr: str, returncode: int) -> str:
-        _ = stderr
-        _ = returncode
         result = (stdout or "").strip()
         if not result:
             raise RuntimeError(

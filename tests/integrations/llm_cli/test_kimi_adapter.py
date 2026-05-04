@@ -16,6 +16,15 @@ def _version_proc() -> MagicMock:
     return m
 
 
+def _login_status_logged_in_proc() -> MagicMock:
+    """Mock response for 'kimi login status' when logged in."""
+    m = MagicMock()
+    m.returncode = 0
+    m.stdout = "You are logged in.\n"
+    m.stderr = ""
+    return m
+
+
 @patch("app.integrations.llm_cli.kimi.subprocess.run")
 @patch("app.integrations.llm_cli.binary_resolver.shutil.which")
 def test_detect_path_binary_logged_in_env(mock_which: MagicMock, mock_run: MagicMock) -> None:
@@ -24,7 +33,9 @@ def test_detect_path_binary_logged_in_env(mock_which: MagicMock, mock_run: Magic
     def side_effect(args: list[str], **kwargs: object) -> MagicMock:
         if len(args) >= 2 and args[1] == "--version":
             return _version_proc()
-        raise AssertionError(args)
+        elif len(args) >= 3 and args[1] == "login" and args[2] == "status":
+            return _login_status_logged_in_proc()
+        raise AssertionError(f"Unexpected call: {args}")
 
     mock_run.side_effect = side_effect
     with patch.dict(os.environ, {"KIMI_API_KEY": "sk-test"}, clear=False):
@@ -36,19 +47,30 @@ def test_detect_path_binary_logged_in_env(mock_which: MagicMock, mock_run: Magic
     assert probe.version == "1.40.0"
 
 
-@patch("app.integrations.llm_cli.kimi.pathlib.Path.exists", return_value=False)
 @patch("app.integrations.llm_cli.kimi.subprocess.run")
 @patch("app.integrations.llm_cli.binary_resolver.shutil.which")
 def test_detect_min_version_enforcement(
-    mock_which: MagicMock, mock_run: MagicMock, mock_exists: MagicMock
+    mock_which: MagicMock, mock_run: MagicMock
 ) -> None:
     mock_which.return_value = "/usr/bin/kimi"
 
-    m_run = MagicMock()
-    m_run.returncode = 0
-    m_run.stdout = "kimi-cli version: 1.39.0\n"
-    m_run.stderr = ""
-    mock_run.return_value = m_run
+    def side_effect(args: list[str], **kwargs: object) -> MagicMock:
+        if len(args) >= 2 and args[1] == "--version":
+            m = MagicMock()
+            m.returncode = 0
+            m.stdout = "kimi-cli version: 1.39.0\n"
+            m.stderr = ""
+            return m
+        elif len(args) >= 3 and args[1] == "login" and args[2] == "status":
+            # When version is below minimum, login status might still succeed
+            m = MagicMock()
+            m.returncode = 0
+            m.stdout = "You are logged in.\n"
+            m.stderr = ""
+            return m
+        raise AssertionError(f"Unexpected call: {args}")
+
+    mock_run.side_effect = side_effect
 
     with patch.dict(os.environ, {}, clear=True):
         probe = KimiAdapter().detect()
@@ -62,16 +84,93 @@ def test_detect_min_version_enforcement(
 @patch("app.integrations.llm_cli.kimi.subprocess.run")
 @patch("app.integrations.llm_cli.binary_resolver.shutil.which")
 def test_detect_missing_config_not_logged_in(
-    mock_which: MagicMock, mock_run: MagicMock, mock_exists: MagicMock
+    mock_which: MagicMock, mock_run: MagicMock, _mock_exists: MagicMock
 ) -> None:
     mock_which.return_value = "/usr/bin/kimi"
-    mock_run.return_value = _version_proc()
+
+    def side_effect(args: list[str], **kwargs: object) -> MagicMock:
+        if len(args) >= 2 and args[1] == "--version":
+            return _version_proc()
+        elif len(args) >= 3 and args[1] == "login" and args[2] == "status":
+            # Not logged in case
+            m = MagicMock()
+            m.returncode = 1
+            m.stdout = ""
+            m.stderr = "Not logged in."
+            return m
+        raise AssertionError(f"Unexpected call: {args}")
+
+    mock_run.side_effect = side_effect
 
     with patch.dict(os.environ, {}, clear=True):
         probe = KimiAdapter().detect()
 
     assert probe.installed is True
     assert probe.logged_in is False
+
+
+@patch("app.integrations.llm_cli.kimi.subprocess.run")
+@patch("app.integrations.llm_cli.binary_resolver.shutil.which")
+def test_detect_login_status_not_logged_in_uses_api_key_fallback(
+    mock_which: MagicMock, mock_run: MagicMock
+) -> None:
+    mock_which.return_value = "/usr/bin/kimi"
+
+    def side_effect(args: list[str], **kwargs: object) -> MagicMock:
+        if len(args) >= 2 and args[1] == "--version":
+            return _version_proc()
+        if len(args) >= 3 and args[1] == "login" and args[2] == "status":
+            m = MagicMock()
+            m.returncode = 1
+            m.stdout = ""
+            m.stderr = "Not logged in."
+            return m
+        raise AssertionError(f"Unexpected call: {args}")
+
+    mock_run.side_effect = side_effect
+
+    with patch.dict(os.environ, {"KIMI_API_KEY": "  sk-test  "}, clear=True):
+        probe = KimiAdapter().detect()
+
+    assert probe.installed is True
+    assert probe.logged_in is True
+    assert "KIMI_API_KEY" in probe.detail
+    assert mock_run.call_args_list[0].args[0] == ["/usr/bin/kimi", "--version"]
+    assert mock_run.call_args_list[1].args[0] == ["/usr/bin/kimi", "login", "status"]
+
+
+@patch("app.integrations.llm_cli.kimi.pathlib.Path.read_text")
+@patch("app.integrations.llm_cli.kimi.pathlib.Path.exists", return_value=True)
+@patch("app.integrations.llm_cli.kimi.subprocess.run")
+@patch("app.integrations.llm_cli.binary_resolver.shutil.which")
+def test_detect_login_status_unavailable_uses_config_fallback(
+    mock_which: MagicMock,
+    mock_run: MagicMock,
+    _mock_exists: MagicMock,
+    mock_read_text: MagicMock,
+) -> None:
+    mock_which.return_value = "/usr/bin/kimi"
+    mock_read_text.return_value = '[providers.moonshot]\napi_key = "sk-config"\n'
+
+    def side_effect(args: list[str], **kwargs: object) -> MagicMock:
+        if len(args) >= 2 and args[1] == "--version":
+            return _version_proc()
+        if len(args) >= 3 and args[1] == "login" and args[2] == "status":
+            m = MagicMock()
+            m.returncode = 2
+            m.stdout = ""
+            m.stderr = "unknown command: login"
+            return m
+        raise AssertionError(f"Unexpected call: {args}")
+
+    mock_run.side_effect = side_effect
+
+    with patch.dict(os.environ, {}, clear=True):
+        probe = KimiAdapter().detect()
+
+    assert probe.installed is True
+    assert probe.logged_in is True
+    assert "config.toml" in probe.detail
 
 
 @patch(
