@@ -149,6 +149,8 @@ class KimiAdapter:
                 [binary_path, "--version"],
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 timeout=_PROBE_TIMEOUT_SEC,
                 check=False,
             )
@@ -185,6 +187,8 @@ class KimiAdapter:
                 [binary_path, "login", "status"],
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 timeout=_PROBE_TIMEOUT_SEC,
                 check=False,
             )

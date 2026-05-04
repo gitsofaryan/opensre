@@ -159,6 +159,8 @@ class CLIBackedLLMClient:
                 input=invocation.stdin,
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 cwd=invocation.cwd,
                 env=merged_env,
                 timeout=invocation.timeout_sec,
