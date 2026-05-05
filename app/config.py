@@ -128,6 +128,7 @@ LLMProvider = Literal[
     "bedrock",
     "minimax",
     "codex",
+    "cursor",
     "claude-code",
     "kimi",
 ]
@@ -179,6 +180,7 @@ class LLMSettings(StrictConfigModel):
             "bedrock",
             "minimax",
             "codex",
+            "cursor",
             "claude-code",
             "kimi",
         )
@@ -195,8 +197,8 @@ class LLMSettings(StrictConfigModel):
 
     @model_validator(mode="after")
     def _require_api_key_for_selected_provider(self) -> "LLMSettings":
-        if self.provider in ("ollama", "bedrock", "codex", "claude-code", "kimi"):
-            return self  # ollama: local; bedrock: IAM; codex/kimi: CLI
+        if self.provider in ("ollama", "bedrock", "codex", "cursor", "claude-code", "kimi"):
+            return self  # ollama: local; bedrock: IAM; codex/cursor/claude-code/kimi: CLI auth
         provider_to_key = {
             "anthropic": self.anthropic_api_key,
             "openai": self.openai_api_key,
