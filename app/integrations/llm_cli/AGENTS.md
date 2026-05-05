@@ -97,6 +97,8 @@ CLI did not positively confirm auth (`logged_in` not `True`): check `KIMI_API_KE
 `login status`, so the fallback mirrors real usage. The same fallback runs when `login status` times
 out or fails to spawn (`logged_in=None`), so a configured API key still counts as authenticated.
 
+## Subprocess environment allowlist
+
 `CLIBackedLLMClient` passes only a safe subset of env vars to the subprocess via
 `build_cli_subprocess_env` in `subprocess_env.py` (`_SAFE_SUBPROCESS_ENV_KEYS` +
 `_SAFE_SUBPROCESS_ENV_PREFIXES`).
@@ -105,6 +107,8 @@ Shared HTTP/API overrides live in `env_overrides.py`: use `nonempty_env_values(.
 `OPENAI_PLATFORM_ENV_KEYS` (Codex), `HTTP_LLM_PROVIDER_ENV_KEYS` (OpenCode),
 `ANTHROPIC_CLI_ENV_KEYS` (Claude Code), or `CURSOR_CLI_ENV_KEYS` (Cursor Agent headless API key).
 Extend those tuples when you add a matching API-key env to `LLMSettings`.
+
+**Kimi** does not use those tuples today: OAuth/API material is covered by forwarding any `KIMI_*` keys via `_SAFE_SUBPROCESS_ENV_PREFIXES`; `KimiAdapter.build()` uses `CLIInvocation(env=None)` and relies on that allowlist.
 
 The current prefix allowlist includes `CODEX_`, `CURSOR_`, `CLAUDE_`, `OPENCODE_`, `KIMI_`, and locale keys (`LC_`).
 
