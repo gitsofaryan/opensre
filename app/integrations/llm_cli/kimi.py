@@ -182,6 +182,8 @@ class KimiAdapter:
             )
 
         # First, try 'kimi login status' for native CLI auth probe
+        logged_in: bool | None = None
+        auth_detail = ""
         try:
             auth_proc = subprocess.run(
                 [binary_path, "login", "status"],
@@ -193,19 +195,20 @@ class KimiAdapter:
                 check=False,
             )
         except (OSError, subprocess.TimeoutExpired):
-            # login status unavailable; fall back to env/config checks
-            logged_in: bool | None = None
+            # login status unavailable; still fall back below (API key / config.toml).
             auth_detail = "Could not verify login status (timeout or OS error)."
         else:
             logged_in, auth_detail = _classify_kimi_login_status(
                 auth_proc.returncode, auth_proc.stdout, auth_proc.stderr
             )
-            # API-key-only setups do not always show up in `kimi login status`.
-            if logged_in is not True:
-                logged_in_fb, auth_detail_fb = _check_kimi_auth_fallback()
-                if logged_in is None or logged_in_fb is True:
-                    logged_in = logged_in_fb
-                    auth_detail = auth_detail_fb
+
+        # `kimi login status` misses some API-key-only setups; timeouts return None —
+        # both cases should merge env/config.toml auth when applicable.
+        if logged_in is not True:
+            logged_in_fb, auth_detail_fb = _check_kimi_auth_fallback()
+            if logged_in is None or logged_in_fb is True:
+                logged_in = logged_in_fb
+                auth_detail = auth_detail_fb
 
         detail = auth_detail + upgrade_note
         return CLIProbe(
