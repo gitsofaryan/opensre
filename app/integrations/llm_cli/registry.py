@@ -35,6 +35,12 @@ def _claude_code_factory() -> LLMCLIAdapter:
     return ClaudeCodeAdapter()
 
 
+def _opencode_factory() -> LLMCLIAdapter:
+    from app.integrations.llm_cli.opencode import OpenCodeAdapter
+
+    return OpenCodeAdapter()
+
+
 def _kimi_factory() -> LLMCLIAdapter:
     from app.integrations.llm_cli.kimi import KimiAdapter
 
@@ -48,6 +54,9 @@ CLI_PROVIDER_REGISTRY: dict[str, CLIProviderRegistration] = {
     ),
     "claude-code": CLIProviderRegistration(
         adapter_factory=_claude_code_factory, model_env_key="CLAUDE_CODE_MODEL"
+    ),
+    "opencode": CLIProviderRegistration(
+        adapter_factory=_opencode_factory, model_env_key="OPENCODE_MODEL"
     ),
     "kimi": CLIProviderRegistration(adapter_factory=_kimi_factory, model_env_key="KIMI_MODEL"),
 }
