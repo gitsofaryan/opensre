@@ -319,7 +319,7 @@ class TestIntegrationsCommand:
         from app.cli.interactive_shell.command_registry import integrations as m
 
         captured = []
-        monkeypatch.setattr(m, "run_cli_command", lambda _, args: captured.append(args))
+        monkeypatch.setattr(m, "run_cli_command", lambda _, args: (captured.append(args), True)[1])
         dispatch_slash("/integrations setup", ReplSession(), Console())
         assert captured == [["integrations", "setup"]]
 
@@ -327,7 +327,7 @@ class TestIntegrationsCommand:
         from app.cli.interactive_shell.command_registry import integrations as m
 
         captured = []
-        monkeypatch.setattr(m, "run_cli_command", lambda _, args: captured.append(args))
+        monkeypatch.setattr(m, "run_cli_command", lambda _, args: (captured.append(args), True)[1])
         dispatch_slash("/integrations remove slack", ReplSession(), Console())
         assert captured == [["integrations", "remove", "slack"]]
 
@@ -361,7 +361,7 @@ class TestMcpCommand:
         from app.cli.interactive_shell.command_registry import integrations as m
 
         captured = []
-        monkeypatch.setattr(m, "run_cli_command", lambda _, args: captured.append(args))
+        monkeypatch.setattr(m, "run_cli_command", lambda _, args: (captured.append(args), True)[1])
         dispatch_slash("/mcp connect", ReplSession(), Console())
         assert captured == [["integrations", "setup"]]
 
@@ -369,7 +369,7 @@ class TestMcpCommand:
         from app.cli.interactive_shell.command_registry import integrations as m
 
         captured = []
-        monkeypatch.setattr(m, "run_cli_command", lambda _, args: captured.append(args))
+        monkeypatch.setattr(m, "run_cli_command", lambda _, args: (captured.append(args), True)[1])
         dispatch_slash("/mcp disconnect github", ReplSession(), Console())
         assert captured == [["integrations", "remove", "github"]]
 
@@ -998,6 +998,7 @@ class TestCliDelegatedCommands:
             ("/tests list", ["tests", "list"]),
             ("/guardrails audit", ["guardrails", "audit"]),
             ("/update", ["update"]),
+            ("/uninstall", ["uninstall"]),
         ],
     )
     def test_command_delegation(
@@ -1006,6 +1007,6 @@ class TestCliDelegatedCommands:
         from app.cli.interactive_shell.command_registry import cli_parity as m
 
         captured = []
-        monkeypatch.setattr(m, "run_cli_command", lambda _, args: captured.append(args))
+        monkeypatch.setattr(m, "run_cli_command", lambda _, args: (captured.append(args), True)[1])
         dispatch_slash(command, ReplSession(), Console())
         assert captured == [expected_args]
