@@ -121,7 +121,7 @@ pytest tests/cli/test_.py                                       # single file
 pytest tests/cli/test_.py::test_                                # single function
 pytest tests/tools/ -k "test_registry"                          # tools example
 pytest tests/synthetic/ -k "test_scenario"                      # no live infra needed
-
+````
 ### 5. Open a Pull Request
 
 Follow the PR template (see below). Link the relevant issue and describe what changed and why.
@@ -147,6 +147,20 @@ Use the **[PR template](.github/PULL_REQUEST_TEMPLATE.md)** (automatically provi
 - Code follows project style (see **Code Quality** section below)
 - Self-reviewed your own code first
 - Considered edge cases
+
+### Greptile Code Review
+
+We use [Greptile](https://greptile.com) for automated code review. Before a PR can be merged it must reach a **5/5 confidence score** with zero unresolved comments.
+
+**Trigger a review** by posting this comment on your PR:
+
+```
+@greptile review
+```
+
+Wait 30–60 seconds for the review to appear, then address each comment and re-trigger until you hit 5/5.
+
+> **Automate the loop** — the [greploop skill](https://skills.sh/greptileai/skills/greploop) handles triggering, waiting, fixing, and re-reviewing automatically until 5/5 is reached.
 
 ### If Your PR Includes Screenshots or Logs
 
