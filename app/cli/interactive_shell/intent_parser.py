@@ -87,6 +87,20 @@ ACTION_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
         ),
         "/uninstall",
     ),
+    (
+        re.compile(
+            r"\b(?:list|show|manage|forget|register)\b.{0,80}?\bagents?\b",
+            re.IGNORECASE,
+        ),
+        "/agents",
+    ),
+    (
+        re.compile(
+            r"\b(?:doctor|check\s+setup|diagnose|diagnostic)\b",
+            re.IGNORECASE,
+        ),
+        "/doctor",
+    ),
 )
 
 SAMPLE_ALERT_RE = re.compile(

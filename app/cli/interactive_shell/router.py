@@ -40,6 +40,8 @@ _BARE_COMMAND_ALIAS_MAP: dict[str, str] = {
     "guardrails": "/guardrails",
     "update": "/update",
     "uninstall": "/uninstall",
+    "agents": "/agents",
+    "doctor": "/doctor",
     "welcome": "/welcome",
     "agent": "/welcome",
     "hi": "/welcome",

@@ -11,6 +11,9 @@ from app.cli.interactive_shell.theme import ACCENT_DIM, TERMINAL_ACCENT_BOLD, TE
 
 
 def _cmd_help(_session: ReplSession, console: Console, _args: list[str]) -> bool:
+    from app.cli.interactive_shell.command_registry.cli_parity import (
+        COMMANDS as PARITY_COMMANDS,
+    )
     from app.cli.interactive_shell.command_registry.integrations import COMMANDS as INT_CMDS
     from app.cli.interactive_shell.command_registry.investigation import COMMANDS as INV_CMDS
     from app.cli.interactive_shell.command_registry.model import COMMANDS as MODEL_CMDS
@@ -24,6 +27,7 @@ def _cmd_help(_session: ReplSession, console: Console, _args: list[str]) -> bool
         ("Integrations & Models", list(INT_CMDS) + list(MODEL_CMDS)),
         ("Investigation", list(INV_CMDS)),
         ("Tasks", list(TASK_CMDS)),
+        ("CLI (parity)", list(PARITY_COMMANDS)),
         ("System", list(SYS_CMDS)),
     ]
 

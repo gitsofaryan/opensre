@@ -66,6 +66,14 @@ def _cmd_uninstall(session: ReplSession, console: Console, args: list[str]) -> b
     return run_cli_command(console, ["uninstall", *args])
 
 
+def _cmd_agents(session: ReplSession, console: Console, args: list[str]) -> bool:  # noqa: ARG001
+    return run_cli_command(console, ["agents", *args])
+
+
+def _cmd_doctor(session: ReplSession, console: Console, args: list[str]) -> bool:  # noqa: ARG001
+    return run_cli_command(console, ["doctor", *args])
+
+
 COMMANDS: list[SlashCommand] = [
     SlashCommand(
         "/onboard",
@@ -108,5 +116,17 @@ COMMANDS: list[SlashCommand] = [
         "remove opensre and all local data from this machine",
         _cmd_uninstall,
         execution_tier=ExecutionTier.ELEVATED,
+    ),
+    SlashCommand(
+        "/agents",
+        "manage the local AI agent fleet ('/agents list|register|forget')",
+        _cmd_agents,
+        execution_tier=ExecutionTier.SAFE,
+    ),
+    SlashCommand(
+        "/doctor",
+        "run a full environment diagnostic to surface setup issues",
+        _cmd_doctor,
+        execution_tier=ExecutionTier.SAFE,
     ),
 ]
