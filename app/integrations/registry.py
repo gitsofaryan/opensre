@@ -5,8 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from app.integrations.config_models import WhatsAppIntegrationConfig
-
 from app.integrations._verification_adapters import (
     VerifierFn,
     _verify_alertmanager,
