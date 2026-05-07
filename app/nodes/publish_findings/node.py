@@ -88,7 +88,7 @@ def generate_report(state: InvestigationState) -> dict:
 
     # Create the structured event
     event = NotificationEvent(
-        title=f"Investigation findings for {state.get('investigation_id', 'unknown')}",
+        title=f"Investigation findings for {investigation_id or 'unknown'}",
         body=slack_message,
         severity="info",
         investigation_id=investigation_id,

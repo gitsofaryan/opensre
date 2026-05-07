@@ -1918,6 +1918,7 @@ def _configure_selected_integrations() -> tuple[list[str], str | None]:
         "notion": "notion",
         "openclaw": "openclaw",
         "opensearch": "opensearch",
+        "splunk": "splunk",
     }
 
     _step(f"Service · {_SERVICE_LABELS.get(selected_service, selected_service)}")
