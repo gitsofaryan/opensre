@@ -54,16 +54,33 @@ def test_whatsapp_send_notification_success(mock_post, whatsapp_provider, sample
 
 
 @patch("app.notifications.providers.whatsapp.post_json")
-def test_whatsapp_send_notification_failure(mock_post, whatsapp_provider, sample_event):
-    """Should return error detail on HTTP failure."""
+def test_whatsapp_send_notification_transport_failure(mock_post, whatsapp_provider, sample_event):
+    """Should return error detail when a network exception occurs (ok=False, status_code=0)."""
     mock_response = MagicMock()
     mock_response.ok = False
-    mock_response.status_code = 500
-    mock_response.error = "Internal Server Error"
+    mock_response.status_code = 0
+    mock_response.error = "Connection refused"
     mock_post.return_value = mock_response
 
     config = {"webhook_url": "https://hooks.whatsapp.test/123"}
     success, error = whatsapp_provider.send_notification(sample_event, config)
 
     assert not success
-    assert "Internal Server Error" in error
+    assert "Connection refused" in error
+
+
+@patch("app.notifications.providers.whatsapp.post_json")
+def test_whatsapp_send_notification_http_error(mock_post, whatsapp_provider, sample_event):
+    """Should return error detail on HTTP-level failure (ok=True, non-2xx status)."""
+    mock_response = MagicMock()
+    mock_response.ok = True
+    mock_response.status_code = 500
+    mock_response.error = ""
+    mock_response.text = "Internal Server Error"
+    mock_post.return_value = mock_response
+
+    config = {"webhook_url": "https://hooks.whatsapp.test/123"}
+    success, error = whatsapp_provider.send_notification(sample_event, config)
+
+    assert not success
+    assert "500" in error

@@ -36,6 +36,7 @@ from app.integrations.config_models import (
     TracerIntegrationConfig,
     VercelIntegrationConfig,
     VictoriaLogsIntegrationConfig,
+    WhatsAppIntegrationConfig,
 )
 from app.integrations.effective_models import (
     EffectiveIntegrationEntry,
@@ -78,4 +79,5 @@ __all__ = [
     "TracerIntegrationConfig",
     "VercelIntegrationConfig",
     "VictoriaLogsIntegrationConfig",
+    "WhatsAppIntegrationConfig",
 ]

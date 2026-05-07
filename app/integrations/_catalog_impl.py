@@ -32,6 +32,7 @@ from app.integrations.config_models import (
     SplunkIntegrationConfig,
     TelegramBotConfig,
     VictoriaLogsIntegrationConfig,
+    WhatsAppIntegrationConfig,
 )
 from app.integrations.effective_models import EffectiveIntegrations
 from app.integrations.github_mcp import build_github_mcp_config
@@ -468,6 +469,20 @@ def _classify_service_instance(
             return None, None
         if tg_config.bot_token:
             return tg_config.model_dump(), "telegram"
+        return None, None
+
+    if key == "whatsapp":
+        try:
+            whatsapp_config = WhatsAppIntegrationConfig.model_validate(
+                {
+                    "webhook_url": credentials.get("webhook_url", ""),
+                    "phone_number": credentials.get("phone_number"),
+                }
+            )
+        except Exception:
+            return None, None
+        if whatsapp_config.webhook_url:
+            return whatsapp_config.model_dump(), "whatsapp"
         return None, None
 
     if key == "openclaw":

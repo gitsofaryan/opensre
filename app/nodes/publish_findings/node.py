@@ -112,18 +112,34 @@ def generate_report(state: InvestigationState) -> dict:
         provider_config = {**creds}
         if service_name == "discord":
             discord_ctx = state.get("discord_context") or {}
-            provider_config.update({
-                "bot_token": discord_ctx.get("bot_token") or creds.get("bot_token", ""),
-                "channel_id": discord_ctx.get("channel_id") or creds.get("default_channel_id", ""),
-                "thread_id": discord_ctx.get("thread_id", ""),
-            })
+            bot_token = discord_ctx.get("bot_token") or creds.get("bot_token", "")
+            channel_id = discord_ctx.get("channel_id") or creds.get("default_channel_id", "")
+            if not bot_token or not channel_id:
+                logger.debug("[publish] skipping discord: missing bot_token or channel_id")
+                continue
+
+            provider_config.update(
+                {
+                    "bot_token": bot_token,
+                    "channel_id": channel_id,
+                    "thread_id": discord_ctx.get("thread_id", ""),
+                }
+            )
         elif service_name == "telegram":
             telegram_ctx = state.get("telegram_context") or {}
-            provider_config.update({
-                "bot_token": telegram_ctx.get("bot_token") or creds.get("bot_token", ""),
-                "chat_id": telegram_ctx.get("chat_id") or creds.get("default_chat_id", ""),
-                "reply_to_message_id": str(telegram_ctx.get("reply_to_message_id") or ""),
-            })
+            bot_token = telegram_ctx.get("bot_token") or creds.get("bot_token", "")
+            chat_id = telegram_ctx.get("chat_id") or creds.get("default_chat_id", "")
+            if not bot_token or not chat_id:
+                logger.debug("[publish] skipping telegram: missing bot_token or chat_id")
+                continue
+
+            provider_config.update(
+                {
+                    "bot_token": bot_token,
+                    "chat_id": chat_id,
+                    "reply_to_message_id": str(telegram_ctx.get("reply_to_message_id") or ""),
+                }
+            )
         elif service_name == "whatsapp":
             # WhatsApp uses webhook_url and phone_number from creds
             pass
