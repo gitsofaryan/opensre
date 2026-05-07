@@ -6,12 +6,10 @@ import logging
 from typing import Any
 
 from app.notifications.interface import NotificationProvider
-from app.utils.telegram_delivery import send_telegram_report, post_telegram_message
+from app.notifications.models import NotificationEvent
+from app.utils.telegram_delivery import post_telegram_message, send_telegram_report
 
 logger = logging.getLogger(__name__)
-
-
-from app.notifications.models import NotificationEvent
 
 
 class TelegramProvider(NotificationProvider):
@@ -29,7 +27,7 @@ class TelegramProvider(NotificationProvider):
         """Verify Telegram connectivity."""
         bot_token = str(config.get("bot_token") or "")
         chat_id = str(config.get("default_chat_id") or config.get("chat_id") or "")
-        
+
         if not bot_token or not chat_id:
             return False, "Missing bot_token or chat_id"
 

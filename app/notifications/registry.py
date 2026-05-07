@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.notifications.interface import NotificationProvider
@@ -47,10 +47,10 @@ def discover_providers() -> None:
     """
     Discover and register all built-in notification providers.
     """
-    from app.notifications.providers.whatsapp import WhatsAppProvider
-    from app.notifications.providers.telegram import TelegramProvider
     from app.notifications.providers.discord import DiscordProvider
     from app.notifications.providers.slack import SlackProvider
+    from app.notifications.providers.telegram import TelegramProvider
+    from app.notifications.providers.whatsapp import WhatsAppProvider
 
     _registry.register("whatsapp", WhatsAppProvider())
     _registry.register("telegram", TelegramProvider())

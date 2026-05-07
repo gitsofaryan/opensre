@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 import pytest
 
 from app.notifications.models import NotificationEvent
@@ -20,7 +21,7 @@ def sample_event():
         title="Test Incident",
         body="This is a test investigation report.",
         severity="critical",
-        investigation_url="https://opensre.ai/i/123"
+        investigation_url="https://opensre.ai/i/123",
     )
 
 
@@ -44,7 +45,7 @@ def test_whatsapp_send_notification_success(mock_post, whatsapp_provider, sample
 
     assert success
     assert not error
-    
+
     # Verify the payload contains the formatted text
     mock_post.assert_called_once()
     args, kwargs = mock_post.call_args

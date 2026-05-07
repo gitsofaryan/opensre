@@ -6,12 +6,10 @@ import logging
 from typing import Any
 
 from app.notifications.interface import NotificationProvider
+from app.notifications.models import NotificationEvent
 from app.utils.slack_delivery import send_slack_report
 
 logger = logging.getLogger(__name__)
-
-
-from app.notifications.models import NotificationEvent
 
 
 class SlackProvider(NotificationProvider):
@@ -34,13 +32,15 @@ class SlackProvider(NotificationProvider):
 
     def probe(self, config: dict[str, Any]) -> tuple[bool, str]:
         """Verify Slack connectivity."""
-        from app.cli.wizard.integration_validators.http_probe_validators import validate_slack_webhook
-        
+        from app.cli.wizard.integration_validators.http_probe_validators import (
+            validate_slack_webhook,
+        )
+
         webhook_url = str(config.get("webhook_url") or "")
         if not webhook_url:
-            # If no webhook, maybe we use bot token? 
+            # If no webhook, maybe we use bot token?
             # For now, OpenSRE onboarding uses webhook for probe.
             return False, "Missing Slack webhook_url"
-            
+
         result = validate_slack_webhook(webhook_url=webhook_url)
         return result.ok, result.detail

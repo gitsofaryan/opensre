@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 from app.notifications.interface import NotificationProvider
+from app.notifications.models import NotificationEvent
 from app.utils.delivery_transport import post_json
 from app.utils.truncation import truncate
 
@@ -13,9 +14,6 @@ logger = logging.getLogger(__name__)
 
 # WhatsApp message limit is generally high, but we'll use a safe default.
 _MESSAGE_LIMIT = 4096
-
-
-from app.notifications.models import NotificationEvent
 
 
 class WhatsAppProvider(NotificationProvider):
@@ -48,7 +46,10 @@ class WhatsAppProvider(NotificationProvider):
             return False, f"WhatsApp delivery failed: {response.error}"
 
         if not 200 <= response.status_code < 300:
-            return False, f"WhatsApp API returned HTTP {response.status_code}: {response.text[:200]}"
+            return (
+                False,
+                f"WhatsApp API returned HTTP {response.status_code}: {response.text[:200]}",
+            )
 
         logger.info("[whatsapp] report delivered successfully to %s", webhook_url)
         return True, ""
@@ -66,4 +67,7 @@ class WhatsAppProvider(NotificationProvider):
         if response.ok and 200 <= response.status_code < 300:
             return True, "WhatsApp bridge connected successfully."
 
-        return False, f"Connectivity check failed: {response.error or f'HTTP {response.status_code}'}"
+        return (
+            False,
+            f"Connectivity check failed: {response.error or f'HTTP {response.status_code}'}",
+        )

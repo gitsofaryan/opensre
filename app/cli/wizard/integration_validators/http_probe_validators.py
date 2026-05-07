@@ -139,7 +139,9 @@ def validate_discord_bot(*, bot_token: str) -> IntegrationHealthResult:
     )
 
 
-def validate_whatsapp_integration(*, webhook_url: str, phone_number: str | None = None) -> IntegrationHealthResult:
+def validate_whatsapp_integration(
+    *, webhook_url: str, phone_number: str | None = None
+) -> IntegrationHealthResult:
     """Validate WhatsApp connectivity via the bridge webhook."""
     from app.notifications.providers.whatsapp import WhatsAppProvider
 
