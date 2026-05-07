@@ -26,16 +26,13 @@ def run_cli_command(console: Console, args: list[str]) -> bool:
         # and the process finishes within this window.
         result = subprocess.run(cmd, check=False, timeout=300)
         if result.returncode != 0:
-            console.print(
-                f"[red]CLI command exited with non-zero code {result.returncode}[/red]"
-            )
+            console.print(f"[red]CLI command exited with non-zero code {result.returncode}[/red]")
     except subprocess.TimeoutExpired:
         console.print("[red]error:[/red] CLI command timed out after 5 minutes")
     except Exception as exc:
         console.print(f"[red]error running CLI command:[/red] {exc}")
     console.print()
     return True
-
 
 
 def _cmd_onboard(session: ReplSession, console: Console, args: list[str]) -> bool:  # noqa: ARG001

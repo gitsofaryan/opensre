@@ -816,7 +816,11 @@ def test_execute_cli_actions_handles_path_with_spaces(monkeypatch: object) -> No
 
     assert execute_cli_actions('run `cat "/tmp/file with spaces.txt"`', session, console) is True
     # On Windows, shlex with posix=False preserves quotes for tokens with spaces.
-    expected_path = '"/tmp/file with spaces.txt"' if intent_parser_module.IS_WINDOWS else "/tmp/file with spaces.txt"
+    expected_path = (
+        '"/tmp/file with spaces.txt"'
+        if intent_parser_module.IS_WINDOWS
+        else "/tmp/file with spaces.txt"
+    )
     assert calls[0][0] == ["cat", expected_path]
 
 
