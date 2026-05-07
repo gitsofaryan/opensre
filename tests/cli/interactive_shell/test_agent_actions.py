@@ -225,8 +225,8 @@ def test_compound_prompt_plans_chat_list_and_blocked_deploy() -> None:
         "AND then deploy OpenSRE to EC2"
     )
 
-    assert plan_terminal_tasks(message) == ["slash"]
-    assert plan_cli_actions(message) == ["/list integrations"]
+    assert plan_terminal_tasks(message) == ["slash", "slash"]
+    assert plan_cli_actions(message) == ["/list integrations", "/deploy"]
 
 
 def test_services_version_deploy_prompt_plans_all_actions() -> None:
@@ -235,8 +235,8 @@ def test_services_version_deploy_prompt_plans_all_actions() -> None:
         "AND then deploy to EC2 within 90 seconds"
     )
 
-    assert plan_terminal_tasks(message) == ["slash", "slash"]
-    assert plan_cli_actions(message) == ["/list integrations", "/version"]
+    assert plan_terminal_tasks(message) == ["slash", "slash", "slash"]
+    assert plan_cli_actions(message) == ["/list integrations", "/version", "/deploy"]
 
 
 def test_explicit_shell_command_plans_shell_action() -> None:
@@ -294,7 +294,7 @@ def test_compound_prompt_executes_all_supported_tasks(monkeypatch: object) -> No
     )
 
     assert handled is False
-    assert dispatched == ["/list integrations"]
+    assert dispatched == ["/list integrations", "/deploy"]
     output = buf.getvalue()
     assert "I'm doing fine" not in output
     assert "EC2 deployment creates AWS" not in output
@@ -328,8 +328,8 @@ def test_services_version_deploy_prompt_executes_in_order(monkeypatch: object) -
         console,
     )
 
-    assert handled is False
-    assert dispatched == ["/list integrations", "/version"]
+    assert handled is True
+    assert dispatched == ["/list integrations", "/version", "/deploy"]
     output = buf.getvalue()
     assert output.index("ran /list integrations") < output.index("ran /version")
     assert "EC2 deployment creates AWS" not in output
@@ -815,7 +815,9 @@ def test_execute_cli_actions_handles_path_with_spaces(monkeypatch: object) -> No
     console, _ = _capture()
 
     assert execute_cli_actions('run `cat "/tmp/file with spaces.txt"`', session, console) is True
-    assert calls[0][0] == ["cat", "/tmp/file with spaces.txt"]
+    # On Windows, shlex with posix=False preserves quotes for tokens with spaces.
+    expected_path = '"/tmp/file with spaces.txt"' if intent_parser_module.IS_WINDOWS else "/tmp/file with spaces.txt"
+    assert calls[0][0] == ["cat", expected_path]
 
 
 def test_execute_cli_actions_rejects_malformed_shell_input() -> None:

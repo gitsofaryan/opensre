@@ -38,6 +38,55 @@ ACTION_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
         ),
         "/version",
     ),
+    (
+        re.compile(
+            r"\b(?:run|start|open|launch)\b.{0,80}?\b(?:onboard(?:ing)?|setup|wizard)\b",
+            re.IGNORECASE,
+        ),
+        "/onboard",
+    ),
+    (
+        re.compile(
+            r"\b(?:deploy|ship|push)\b.{0,80}?\b(?:to|opensre)\b",
+            re.IGNORECASE,
+        ),
+        "/deploy",
+    ),
+    (
+        re.compile(
+            r"\b(?:check|trigger|run|show)\b.{0,80}?\b(?:remote|deployed)\b",
+            re.IGNORECASE,
+        ),
+        "/remote",
+    ),
+    (
+        re.compile(
+            r"\b(?:run|list|browse|show|check)\b.{0,80}?\btests\b",
+            re.IGNORECASE,
+        ),
+        "/tests",
+    ),
+    (
+        re.compile(
+            r"\b(?:audit|manage|show|list|test)\b.{0,80}?\bguardrails?\b",
+            re.IGNORECASE,
+        ),
+        "/guardrails",
+    ),
+    (
+        re.compile(
+            r"\b(?:update|upgrade|check\s+for\s+new)\b.{0,80}?\b(?:version|opensre)\b",
+            re.IGNORECASE,
+        ),
+        "/update",
+    ),
+    (
+        re.compile(
+            r"\b(?:uninstall|remove|delete|wipe)\b.{0,80}?\bopensre\b",
+            re.IGNORECASE,
+        ),
+        "/uninstall",
+    ),
 )
 
 SAMPLE_ALERT_RE = re.compile(
