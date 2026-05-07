@@ -28,6 +28,13 @@ _BARE_COMMAND_ALIASES = frozenset(
         "reset",
         "status",
         "trust",
+        "onboard",
+        "deploy",
+        "remote",
+        "tests",
+        "guardrails",
+        "update",
+        "uninstall",
     }
 )
 BARE_COMMAND_ALIASES = _BARE_COMMAND_ALIASES

@@ -8,6 +8,9 @@ from itertools import chain
 from rich.console import Console
 from rich.markup import escape
 
+from app.cli.interactive_shell.command_registry.cli_parity import (
+    COMMANDS as PARITY_COMMANDS,
+)
 from app.cli.interactive_shell.command_registry.help import COMMANDS as HELP_COMMANDS
 from app.cli.interactive_shell.command_registry.integrations import (
     COMMANDS as INTEGRATIONS_COMMANDS,
@@ -44,6 +47,7 @@ _MERGED_SEQUENCE = tuple(
         MODEL_COMMANDS,
         INVESTIGATION_COMMANDS,
         TASK_COMMANDS,
+        PARITY_COMMANDS,
         SYSTEM_COMMANDS,
     )
 )
