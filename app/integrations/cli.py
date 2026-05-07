@@ -695,6 +695,17 @@ def _setup_mariadb() -> None:
     )
 
 
+def _setup_whatsapp() -> None:
+    webhook_url = _p("WhatsApp Webhook URL (from your bridge)", secret=True)
+    phone_number = _p("Your WhatsApp phone number (optional)")
+    if not webhook_url:
+        _die("webhook_url is required.")
+    upsert_integration(
+        "whatsapp",
+        {"credentials": {"webhook_url": webhook_url, "phone_number": phone_number}},
+    )
+
+
 def _setup_alertmanager() -> None:
     base_url = _p("Alertmanager URL (e.g. http://alertmanager:9093)")
     if not base_url:
@@ -754,6 +765,7 @@ _HANDLERS: dict[str, Any] = {
     "openclaw": _setup_openclaw,
     "postgresql": _setup_postgresql,
     "mysql": _setup_mysql,
+    "whatsapp": _setup_whatsapp,
 }
 
 

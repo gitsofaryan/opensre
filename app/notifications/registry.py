@@ -27,8 +27,8 @@ class NotificationRegistry:
         return self._providers.get(name)
 
     def get_providers(self) -> dict[str, NotificationProvider]:
-        """Get all registered providers."""
-        return self._providers
+        """Get all registered providers as a read-only view."""
+        return dict(self._providers)
 
 
 # Global registry instance

@@ -50,13 +50,7 @@ def generate_report(state: InvestigationState) -> dict:
     _alert_ts = slack_ctx.get("ts") or slack_ctx.get("thread_ts")
 
     resolved = state.get("resolved_integrations") or {}
-    discord_creds = resolved.get("discord", {})
     logger.debug("[publish] slack_ctx=%s", slack_ctx)
-    logger.debug(
-        "[publish] discord creds present=%s keys=%s",
-        bool(discord_creds),
-        list(discord_creds.keys()) if discord_creds else [],
-    )
 
     report_posted, delivery_error = send_slack_report(
         slack_message,
