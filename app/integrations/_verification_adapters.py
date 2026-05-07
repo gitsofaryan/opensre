@@ -23,6 +23,7 @@ from app.integrations.config_models import (
     IncidentIoIntegrationConfig,
     SlackWebhookConfig,
     TracerIntegrationConfig,
+    WhatsAppIntegrationConfig,
 )
 from app.integrations.github_mcp import build_github_mcp_config, validate_github_mcp_config
 from app.integrations.mariadb import build_mariadb_config, validate_mariadb_config
@@ -572,6 +573,22 @@ _verify_victoria_logs = build_probe_verifier(
 )
 
 
+def _verify_whatsapp(source: str, config: dict[str, Any]) -> dict[str, str]:
+    from app.notifications.providers.whatsapp import WhatsAppProvider
+
+    try:
+        whatsapp_config = WhatsAppIntegrationConfig.model_validate(config)
+    except Exception as err:
+        return result("whatsapp", source, "missing", str(err))
+
+    if not whatsapp_config.webhook_url:
+        return result("whatsapp", source, "missing", "Missing WhatsApp webhook_url")
+
+    provider = WhatsAppProvider()
+    success, detail = provider.probe(whatsapp_config.model_dump())
+    return result("whatsapp", source, "passed" if success else "failed", detail)
+
+
 def _verify_slack_without_test(source: str, config: dict[str, Any]) -> dict[str, str]:
     return _verify_slack(source, config, send_slack_test=False)
 
@@ -626,6 +643,7 @@ __all__ = [
     "_verify_tracer",
     "_verify_vercel",
     "_verify_victoria_logs",
+    "_verify_whatsapp",
     "build_probe_verifier",
     "build_validation_verifier",
     "result",

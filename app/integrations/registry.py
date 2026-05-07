@@ -44,7 +44,9 @@ from app.integrations._verification_adapters import (
     _verify_tracer,
     _verify_vercel,
     _verify_victoria_logs,
+    _verify_whatsapp,
 )
+from app.integrations.config_models import WhatsAppIntegrationConfig
 
 
 @dataclass(frozen=True)
@@ -58,6 +60,7 @@ class IntegrationSpec:
     env_loader: Any | None = None
     effective_resolver: Any | None = None
     verifier: VerifierFn | None = None
+    config_model: type[Any] | None = None
     direct_effective: bool = False
     skip_classification: bool = False
     core_verify: bool = False
@@ -331,6 +334,13 @@ INTEGRATION_SPECS: tuple[IntegrationSpec, ...] = (
         service="supabase",
         verifier=_verify_supabase,
         verify_order=99,
+    ),
+    IntegrationSpec(
+        service="whatsapp",
+        verifier=_verify_whatsapp,
+        config_model=WhatsAppIntegrationConfig,
+        direct_effective=True,
+        setup_order=13,
     ),
 )
 
