@@ -219,7 +219,28 @@ def test_execute_cli_actions_answers_discord_then_dispatches_datadog(
     assert "ran /integrations show datadog" in output
 
 
-def test_compound_prompt_plans_chat_list_and_blocked_deploy() -> None:
+def test_compound_prompt_plans_chat_list_and_cli_command() -> None:
+    message = (
+        "tell me how you are doing AND show me all the services we are connected to "
+        "AND then run opensre deploy"
+    )
+
+    assert plan_terminal_tasks(message) == ["slash", "cli_command"]
+    assert plan_cli_actions(message) == ["/list integrations", "deploy"]
+
+
+def test_cli_command_requires_explicit_opensre_context() -> None:
+    message = "the tool uses -- deploy as an argument separator"
+
+    assert plan_terminal_tasks(message) == []
+    assert plan_cli_actions(message) == []
+
+
+def test_cli_command_preserves_flags_after_explicit_opensre_prefix() -> None:
+    assert plan_cli_actions("please run opensre deploy --dry-run") == ["deploy --dry-run"]
+
+
+def test_compound_prompt_plans_chat_list_and_slash_deploy_paraphrase() -> None:
     message = (
         "tell me how you are doing AND show me all the services we are connected to "
         "AND then deploy OpenSRE to EC2"
@@ -797,7 +818,29 @@ def test_execute_cli_actions_blocks_ambiguous_shell_operators() -> None:
     assert "shell operators" in output
 
 
-def test_execute_cli_actions_handles_path_with_spaces(monkeypatch: object) -> None:
+def test_compound_prompt_plans_chat_list_and_blocked_deploy() -> None:
+    message = "show versions AND show services AND opensre agent"
+    planned = plan_cli_actions(message)
+    assert "agent" in planned
+    session = ReplSession()
+    console, buf = _capture()
+    result = execute_cli_actions("opensre agent", session, console)
+    assert result is True
+    output = buf.getvalue()
+    assert "blocked" in output.lower()
+
+
+def test_execute_cli_actions_handles_path_with_spaces_run_phrase() -> None:
+    session = ReplSession()
+    console, buf = _capture()
+    result = execute_cli_actions('run cat "/tmp/file with spaces.txt"', session, console)
+    assert result is True
+    assert session.history[-1]["type"] == "shell"
+    output = buf.getvalue()
+    assert "/tmp/file with spaces.txt" in output
+
+
+def test_execute_cli_actions_backtick_shell_preserves_space_path_token(monkeypatch: object) -> None:
     calls: list[tuple[list[str], dict[str, object]]] = []
 
     def _fake_run(command: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
