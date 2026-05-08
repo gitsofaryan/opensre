@@ -1054,9 +1054,7 @@ class TestCliDelegatedCommands:
 
         captured: list[list[str]] = []
 
-        def _fake_run_cli_command(
-            _console: Console, args: list[str], **kwargs: object
-        ) -> bool:
+        def _fake_run_cli_command(_console: Console, args: list[str], **kwargs: object) -> bool:
             captured.append(args)
             return True
 
