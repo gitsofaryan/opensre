@@ -10,25 +10,36 @@ from rich.console import Console
 from app.cli.interactive_shell.command_registry.types import ExecutionTier, SlashCommand
 from app.cli.interactive_shell.session import ReplSession
 
+_UPDATE_SUBPROCESS_TIMEOUT_SECONDS = 300
 
-def run_cli_command(console: Console, args: list[str]) -> bool:
+
+def run_cli_command(
+    console: Console,
+    args: list[str],
+    *,
+    subprocess_timeout: float | None = None,
+) -> bool:
     """Helper to delegate complex or interactive Click commands to a child process.
 
-    NOTE: This call is synchronous and blocking. This is intentional to support
-    interactive CLI workflows (wizards, pickers) that require standard input.
-    Users can interrupt a hanging or slow command using Ctrl+C.
+    ``subprocess_timeout`` caps how long ``subprocess.run`` waits before raising
+    :class:`~subprocess.TimeoutExpired`. Interactive flows use ``None`` so the
+    child can prompt as long as needed; callers that hit the network without a
+    TTY (like ``opensre update``) pass a bounded timeout.
+
+    Ctrl+C sends :exc:`KeyboardInterrupt`, which subclasses :exc:`BaseException`
+    rather than :exc:`Exception`; it is handled here so the REPL survives and the
+    child process exits on SIGINT alongside the interrupted ``run`` call.
     """
     console.print()
     cmd = [sys.executable, "-m", "app.cli", *args]
     try:
-        # 5-minute timeout as a safety guard for network-touching commands (like /update).
-        # Interactive wizards will still work as long as the user provides input
-        # and the process finishes within this window.
-        result = subprocess.run(cmd, check=False, timeout=300)
+        result = subprocess.run(cmd, check=False, timeout=subprocess_timeout)
         if result.returncode != 0:
             console.print(f"[red]CLI command exited with non-zero code {result.returncode}[/red]")
     except subprocess.TimeoutExpired:
-        console.print("[red]error:[/red] CLI command timed out after 5 minutes")
+        console.print("[red]error:[/red] CLI command timed out")
+    except KeyboardInterrupt:
+        console.print("[dim]CLI command cancelled (Ctrl+C).[/dim]")
     except Exception as exc:
         console.print(f"[red]error running CLI command:[/red] {exc}")
     console.print()
@@ -56,7 +67,11 @@ def _cmd_guardrails(session: ReplSession, console: Console, args: list[str]) -> 
 
 
 def _cmd_update(session: ReplSession, console: Console, args: list[str]) -> bool:  # noqa: ARG001
-    return run_cli_command(console, ["update", *args])
+    return run_cli_command(
+        console,
+        ["update", *args],
+        subprocess_timeout=_UPDATE_SUBPROCESS_TIMEOUT_SECONDS,
+    )
 
 
 def _cmd_uninstall(session: ReplSession, console: Console, args: list[str]) -> bool:  # noqa: ARG001
@@ -65,10 +80,6 @@ def _cmd_uninstall(session: ReplSession, console: Console, args: list[str]) -> b
 
 def _cmd_config(session: ReplSession, console: Console, args: list[str]) -> bool:  # noqa: ARG001
     return run_cli_command(console, ["config", *args])
-
-
-def _cmd_doctor(session: ReplSession, console: Console, args: list[str]) -> bool:  # noqa: ARG001
-    return run_cli_command(console, ["doctor", *args])
 
 
 COMMANDS: list[SlashCommand] = [
@@ -118,12 +129,6 @@ COMMANDS: list[SlashCommand] = [
         "/config",
         "show or edit local OpenSRE config ('/config show|set <key> <value>')",
         _cmd_config,
-        execution_tier=ExecutionTier.SAFE,
-    ),
-    SlashCommand(
-        "/doctor",
-        "run a full environment diagnostic to surface setup issues",
-        _cmd_doctor,
         execution_tier=ExecutionTier.SAFE,
     ),
 ]

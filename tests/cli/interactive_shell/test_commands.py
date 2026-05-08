@@ -794,7 +794,7 @@ class TestInvestigateFileCommand:
         console, _ = _capture()
         dispatch_slash(f"/investigate {alert_file}", session, console)
 
-        # The next free-text alert must inherit these â€” proving accumulation ran.
+        # The next free-text alert must inherit these—proving accumulation ran.
         assert session.accumulated_context == {
             "service": "orders-api",
             "cluster_name": "prod-us-east",
@@ -1052,7 +1052,14 @@ class TestCliDelegatedCommands:
     ) -> None:
         from app.cli.interactive_shell.command_registry import cli_parity as m
 
-        captured = []
-        monkeypatch.setattr(m, "run_cli_command", lambda _, args: (captured.append(args), True)[1])
+        captured: list[list[str]] = []
+
+        def _fake_run_cli_command(
+            _console: Console, args: list[str], **kwargs: object
+        ) -> bool:
+            captured.append(args)
+            return True
+
+        monkeypatch.setattr(m, "run_cli_command", _fake_run_cli_command)
         dispatch_slash(command, ReplSession(), Console())
         assert captured == [expected_args]
