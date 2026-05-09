@@ -51,8 +51,7 @@ class WhatsAppProvider(NotificationProvider):
                 f"WhatsApp API returned HTTP {response.status_code}: {response.text[:200]}",
             )
 
-        safe = webhook_url.split("?", 1)[0][:60]
-        logger.info("[whatsapp] report delivered successfully (url=%s...)", safe)
+        logger.info("[whatsapp] report delivered successfully.")
         return True, ""
 
     def probe(self, config: dict[str, Any]) -> tuple[bool, str]:
