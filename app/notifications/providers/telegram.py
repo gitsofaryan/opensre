@@ -21,7 +21,9 @@ class TelegramProvider(NotificationProvider):
         config: dict[str, Any],
     ) -> tuple[bool, str]:
         """Send an RCA report to Telegram."""
-        return send_telegram_report(event.format_text(), config)
+        # Use the raw body to preserve Slack-style markdown which Telegram partially supports,
+        # rather than the plain-text fallback from format_text().
+        return send_telegram_report(event.body, config)
 
     def probe(self, config: dict[str, Any]) -> tuple[bool, str]:
         """Verify Telegram connectivity."""

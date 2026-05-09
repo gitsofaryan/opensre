@@ -21,7 +21,9 @@ class DiscordProvider(NotificationProvider):
         config: dict[str, Any],
     ) -> tuple[bool, str]:
         """Send an RCA report to Discord."""
-        return send_discord_report(event.format_text(), config)
+        # Use the raw body to preserve Slack-style markdown which Discord partially supports,
+        # rather than the plain-text fallback from format_text().
+        return send_discord_report(event.body, config)
 
     def probe(self, config: dict[str, Any]) -> tuple[bool, str]:
         """Verify Discord connectivity."""

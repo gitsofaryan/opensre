@@ -32,7 +32,7 @@ class WhatsAppProvider(NotificationProvider):
         if not webhook_url:
             return False, "Missing WhatsApp webhook_url"
 
-        text = truncate(event.format_text(), _MESSAGE_LIMIT, suffix="…")
+        text = truncate(event.format_text(), _MESSAGE_LIMIT, suffix="...")
         payload = {"text": text}
 
         # Handle potential phone number or group ID in config
@@ -51,7 +51,8 @@ class WhatsAppProvider(NotificationProvider):
                 f"WhatsApp API returned HTTP {response.status_code}: {response.text[:200]}",
             )
 
-        logger.info("[whatsapp] report delivered successfully to %s", webhook_url)
+        safe = webhook_url.split("?", 1)[0][:60]
+        logger.info("[whatsapp] report delivered successfully (url=%s...)", safe)
         return True, ""
 
     def probe(self, config: dict[str, Any]) -> tuple[bool, str]:
@@ -60,7 +61,9 @@ class WhatsAppProvider(NotificationProvider):
         if not webhook_url:
             return False, "Missing WhatsApp webhook_url"
 
-        # Simple health check ping to the bridge
+        # Simple health check ping to the bridge.
+        # The bridge is expected to handle this sentinel out-of-band or
+        # deliver it as a standard connectivity check message.
         payload = {"type": "probe", "text": "OpenSRE connectivity check"}
         response = post_json(url=webhook_url, payload=payload, timeout=10.0)
 
