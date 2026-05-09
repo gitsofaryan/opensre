@@ -1,0 +1,44 @@
+---
+title: WhatsApp
+description: Connect OpenSRE to WhatsApp for incident alerts and findings.
+---
+
+OpenSRE supports sending notifications, incident findings, and root-cause analysis reports directly to WhatsApp via a webhook bridge.
+
+## Prerequisites
+
+To use WhatsApp notifications, you need:
+1. A WhatsApp Business API account or a bridge service (like a custom webhook receiver).
+2. The webhook URL for your bridge.
+3. (Optional) The phone number or group ID to send notifications to.
+
+## Configuration
+
+### Via Onboarding Wizard
+
+The easiest way to configure WhatsApp is during the `opensre onboard` flow:
+1. Select **WhatsApp** from the list of integrations.
+2. Provide your **Bridge Webhook URL**.
+3. (Optional) Enter the target **Phone Number**.
+
+### Via CLI
+
+You can also set up WhatsApp manually:
+
+```bash
+opensre integrations setup whatsapp
+```
+
+## Security
+
+OpenSRE redacts sensitive information from logs and console output. The WhatsApp bridge URL is treated as a secret and will be masked (e.g., `https://api.bridge.com/wh/v1/****`).
+
+## How it Works
+
+When an incident is detected or an investigation completes:
+1. OpenSRE formats the report using a WhatsApp-friendly template.
+2. A POST request is sent to your configured webhook bridge.
+3. Your bridge service forwards the message to the target WhatsApp recipient.
+
+> [!TIP]
+> Since WhatsApp does not natively support rich markdown, the integration uses a simplified text format to ensure readability across all WhatsApp clients.
