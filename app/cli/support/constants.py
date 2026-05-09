@@ -51,6 +51,7 @@ SETUP_SERVICES: tuple[str, ...] = (
     "slack",
     "tracer",
     "vercel",
+    "whatsapp",
 )
 
 VERIFY_SERVICES: tuple[str, ...] = (
@@ -84,6 +85,7 @@ VERIFY_SERVICES: tuple[str, ...] = (
     "tracer",
     "vercel",
     "victoria_logs",
+    "whatsapp",
 )
 MANAGED_INTEGRATION_SERVICES: tuple[str, ...] = tuple(
     sorted(set(SETUP_SERVICES) | set(VERIFY_SERVICES))
