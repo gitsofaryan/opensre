@@ -38,7 +38,10 @@ class WhatsAppProvider(NotificationProvider):
         # Handle potential phone number or group ID in config
         phone = config.get("phone_number") or config.get("phone")
         if phone:
-            payload["phone"] = phone
+            # Normalize phone number: remove non-digits (keep country code prefix)
+            phone_digits = "".join(c for c in str(phone) if c.isdigit())
+            if phone_digits:
+                payload["phone"] = phone_digits
 
         response = post_json(url=webhook_url, payload=payload, timeout=15.0)
 
