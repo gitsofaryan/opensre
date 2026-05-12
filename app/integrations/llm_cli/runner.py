@@ -127,9 +127,6 @@ class CLIBackedLLMClient:
                 cwd=invocation.cwd,
                 env=merged_env,
                 timeout=invocation.timeout_sec,
-                # We use check=False so we can manually catch returncode != 0
-                # and delegate the error explanation to the adapter's explain_failure()
-                # for a more user-friendly diagnostic message.
                 check=False,
             )
         except subprocess.TimeoutExpired as exc:

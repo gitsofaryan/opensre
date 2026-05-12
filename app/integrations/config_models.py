@@ -710,8 +710,17 @@ class WhatsAppIntegrationConfig(StrictConfigModel):
     webhook_url: str
     phone_number: str | None = None
 
-    _normalize_webhook_url = field_validator("webhook_url", mode="before")(normalize_url())
     _normalize_phone_number = field_validator("phone_number", mode="before")(normalize_str())
+
+    @field_validator("webhook_url", mode="before")
+    @classmethod
+    def _normalize_and_validate_webhook_url(cls, value: object) -> str:
+        normalized = normalize_url()(value)
+        return validate_https_or_loopback_http_url(
+            normalized,
+            service_name="WhatsApp",
+            field_name="webhook_url",
+        )
 
 
 # ---------------------------------------------------------------------------

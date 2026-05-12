@@ -9,8 +9,11 @@ OpenSRE supports sending notifications, incident findings, and root-cause analys
 
 To use WhatsApp notifications, you need:
 1. A WhatsApp Business API account or a bridge service (like a custom webhook receiver).
-2. The webhook URL for your bridge.
+2. An HTTPS webhook URL for your bridge. Local development can use loopback HTTP, such as `http://localhost:8787/whatsapp`.
 3. (Optional) The phone number or group ID to send notifications to.
+4. Explicit opt-in from every WhatsApp recipient you plan to alert.
+
+If your bridge forwards to Twilio or the WhatsApp Business API, make sure it uses approved templates when sending outside the 24-hour customer-service window. OpenSRE sends a plain incident payload to the bridge; template selection, opt-in enforcement, and provider-specific rate limiting belong in the bridge.
 
 ## Configuration
 
@@ -20,6 +23,7 @@ The easiest way to configure WhatsApp is during the `opensre onboard` flow:
 1. Select **WhatsApp** from the list of integrations.
 2. Provide your **Bridge Webhook URL**.
 3. (Optional) Enter the target **Phone Number**.
+4. Wait for the connectivity check to pass.
 
 ### Via CLI
 
@@ -29,9 +33,19 @@ You can also set up WhatsApp manually:
 opensre integrations setup whatsapp
 ```
 
+Then verify the stored credentials:
+
+```bash
+opensre integrations verify whatsapp
+```
+
+OpenSRE stores the credentials in `~/.config/opensre/integrations.json` and resolves them automatically during the investigation workflow. When an investigation finishes, the publish step sends the final report to the configured WhatsApp bridge.
+
 ## Security
 
 OpenSRE redacts sensitive information from logs and console output. The WhatsApp bridge URL is treated as a secret and will be masked (e.g., `https://api.bridge.com/wh/v1/****`).
+
+Do not paste production bridge URLs into issues, logs, demos, or screenshots. For PR demos, use a disposable test bridge and test WhatsApp recipient.
 
 ## How it Works
 
@@ -42,3 +56,36 @@ When an incident is detected or an investigation completes:
 
 > [!TIP]
 > Since WhatsApp does not natively support rich markdown, the integration uses a simplified text format to ensure readability across all WhatsApp clients.
+
+## Bridge contract
+
+OpenSRE sends JSON to the configured webhook:
+
+```json
+{
+  "text": "[INFO] Investigation findings for inv-123\n\n...",
+  "phone": "+15551234567"
+}
+```
+
+The `phone` field is omitted when no phone number is configured. The bridge should return a 2xx response only after it has accepted the message for delivery.
+
+During setup and verification, OpenSRE sends a probe payload:
+
+```json
+{
+  "type": "probe",
+  "text": "OpenSRE connectivity check"
+}
+```
+
+Your bridge may handle this sentinel out-of-band or deliver it to your test recipient as a connectivity message.
+
+## Testing
+
+The WhatsApp integration is covered by unit tests, integration tests, and an e2e-equivalent publish-flow test:
+
+```bash
+uv run pytest tests/notifications/test_whatsapp_provider.py tests/integrations/test_whatsapp.py -v
+uv run pytest tests/e2e/whatsapp/test_whatsapp_e2e.py -v
+```
